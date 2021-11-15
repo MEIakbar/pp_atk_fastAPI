@@ -47,8 +47,8 @@ app = FastAPI()
 #     return user
 
 def get_constraint():
-    file_path = "./data/Constraint_PPATK.csv"
-    df = pd.read_csv(file_path)
+    file_path = "./data/Constraint_PPATK.xlsx"
+    df = pd.read_excel(file_path)
     return df
 
 def get_input_char(df, nama):
@@ -172,8 +172,8 @@ async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional
     return respond_out
 
 
-if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8090, log_level="info", reload=True)
+# if __name__ == "__main__":
+#     uvicorn.run("api:app", host="0.0.0.0", port=8090, log_level="info", reload=True)
 
 # to run python api.py
 # go here http://127.0.0.1:8090/docs
