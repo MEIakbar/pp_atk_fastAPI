@@ -52,6 +52,13 @@ def UN_extract_NATIONALITY(df, col):
         list_value.append(value)
     return list_value
 
+def UN_date_prepro(s):
+    try:
+        result = datetime.strptime(s, '%Y-%m-%d').strftime("%Y/%m/%d")
+        return result
+    except:
+        return s
+
 def extract_OPEC_Nama(s):
     return s.split(";")[0]
 
@@ -193,6 +200,7 @@ def dttot_prepro(path):
     # fillnan
     df_dttot = df_dttot.fillna("No Data")
 
+
     # filter Orang
     df_dttot = df_dttot[df_dttot["Terduga"] == "Orang"].reset_index(drop=True)
 
@@ -276,7 +284,9 @@ def UK_prepro(df):
 
 
 def UN_prepro(df):
-    df = df.fillna("No Data")
+    cols = list(df.columns)
+    cols.remove("INDIVIDUAL_DATE_OF_BIRTH")
+    df[cols] = df[cols].fillna("No Data")
     cols = ["FIRST_NAME", "SECOND_NAME", "THIRD_NAME", "FOURTH_NAME"]
 
     # create Nama column
@@ -303,6 +313,8 @@ def UN_prepro(df):
     # remove columns
     cols = ["SORT_KEY", "SORT_KEY_LAST_MOD"]
     df.drop(cols, axis=1, inplace=True)
+
+    df['INDIVIDUAL_DATE_OF_BIRTH'] = df['INDIVIDUAL_DATE_OF_BIRTH'].apply(UN_date_prepro)
     # rename Columns
     df = df.rename(columns={"LISTED_ON" : "Listed On",
                             "COMMENTS1" : "Deskripsi",
