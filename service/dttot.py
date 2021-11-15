@@ -54,7 +54,7 @@ def UN_extract_NATIONALITY(df, col):
 
 def UN_date_prepro(s):
     try:
-        result = datetime.strptime(s, '%Y-%m-%d').strftime("%Y/%m/%d")
+        result = datetime.strptime(s, '%Y-%m-%d').strftime("%d/%m/%Y")
         return result
     except:
         return s
