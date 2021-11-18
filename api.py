@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI
-# from pydantic import BaseModel
+from pydantic import BaseModel
 
 from service.get_data import get_all_data
 from service.dttot import get_similarity
@@ -13,38 +13,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 app = FastAPI()
-
-# class UserIn(BaseModel):
-#     Nama: Optional[str]=None
-#     NIK: Optional[str]=None
-#     DOB: Optional[str]=None
-#     POB: Optional[str]=None
-#     Alamat: Optional[str]=None
-
-    # username: str
-    # password: str
-    # email: EmailStr
-    # full_name: Optional[str] = None
-
-
-# class UserOut(BaseModel):
-#     "Reccomendation" : str
-#     "Nama" : str
-#     "Similarity_Score" : str
-#     "NIK" : str
-#     "DOB" : str
-#     "POB" : str
-#     "Alamat" : str
-#     "Note" : str
-
-    # username: str
-    # email: EmailStr
-    # full_name: Optional[str] = None
-
-
-# @app.post("/user/", response_model=UserOut)
-# async def create_user(user: UserIn):
-#     return user
 
 def get_constraint():
     file_path = "./data/Constraint_PPATK.xlsx"
@@ -61,7 +29,9 @@ def DOB_similarity(df, col, dob_input):
     return df
 
 def NIK_similarity(df, col, NIK_input):
-    df = df[df[col].str.contains(NIK_input)].reset_index(drop=True)
+    # Get First 14 character of NIK
+    NIK_14chars = NIK_input[0:14]
+    df = df[df[col].str.contains(NIK_14chars)].reset_index(drop=True)
     return df
 
 def POB_similarity(df, col, pob_input):
@@ -89,8 +59,9 @@ def treatment_constraint(nama_status, nik_status, dob_status, pob_status):
     return result_recommendation
 
 
-@app.get('/PPATK/')
-async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Optional[str]=None, Alamat: Optional[str]=None):
+@app.post('/PPATK/')
+async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Optional[str]=None, Alamat: Optional[str]=None):
+
     # initialization some variable
     nama_status = "not match"
     nik_status = "not match"
@@ -106,26 +77,34 @@ async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional
     start_time = time.time()
     # filter nama berdasarkan 4 character awal untuk setiap kata
     if Nama is not None:
+        Nama = Nama.strip()
+        Nama = Nama.lower()
         df_nama = get_input_char(df, Nama)
         if df_nama.shape[0] > 0:
             df = df_nama.copy()
-            dict_filter["Nama"] = Nama
+            dict_filter["nama"] = Nama
             nama_status = "match"
     print("--- %s seconds ---" % (time.time() - start_time))
 
     # filter DOB_similarity
     if DOB is not None:
-        df_DOB = DOB_similarity(df, 'Tanggal Lahir', DOB)
+        DOB = DOB.strip()
+        DOB = DOB.lower()
+        df_DOB = DOB_similarity(df_nama, 'tanggal lahir', DOB)
         if df_DOB.shape[0] > 0:
-            df = df_DOB.copy()
+            df_nama = df_DOB.copy()
             dob_status = "match"
 
     # filter NIK_input
     if NIK is not None:
-        df_NIK = NIK_similarity(df, 'NIK', NIK)
+        NIK = NIK.strip()
+        NIK = NIK.lower()
+        if df_nama.shape[0] > 0:
+            df = df_nama.copy()
+        df_NIK = NIK_similarity(df, 'nik', NIK)
         if df_NIK.shape[0] > 0:
             df = df_NIK.copy()
-            dict_filter["NIK"] = NIK
+            dict_filter["nik"] = NIK
             if len(NIK) <= 5:
                 nik_status = "not match"
             else:
@@ -133,11 +112,12 @@ async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional
 
     # filter POB_similarity
     if POB is not None:
+        POB = POB.strip()
         POB = POB.lower()
-        df_POB = POB_similarity(df, 'Tempat Lahir', POB)
+        df_POB = POB_similarity(df_nama, 'tempat lahir', POB)
         if df_POB.shape[0] > 0 :
             df = df_POB.copy()
-            dict_filter["Tpt Lahir"] = POB
+            dict_filter["pob"] = POB
             pob_status = "match"
 
     # set Note output
@@ -157,11 +137,15 @@ async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional
             nama_status = "not match"
 
     reccomendation = treatment_constraint(nama_status, nik_status, dob_status, pob_status)
+    # if outp is not None:
+    #     simalarity_value = df["similarity"][0]
+    # return templates.TemplateResponse(
+    #     'df_representation.html',
+    #     {'request': request, 'data': data.to_html()}
+    # )
 
     respond_out = {
         "Recommendation" : reccomendation,
-        # "Nama" : nama_status,
-        # "Similarity_Score" : simalarity_value,
         "Nama Similarity" : simalarity_value,
         "NIK" : nik_status,
         "DOB" : dob_status,
@@ -172,8 +156,8 @@ async def dttot(Nama: Optional[str]=None, NIK: Optional[str]=None, DOB: Optional
     return respond_out
 
 
-# if __name__ == "__main__":
-#     uvicorn.run("api:app", host="0.0.0.0", port=8090, log_level="info", reload=True)
+if __name__ == "__main__":
+    uvicorn.run("api:app", host="0.0.0.0", port=8090, log_level="info", reload=True)
 
 # to run python api.py
 # go here http://127.0.0.1:8090/docs
