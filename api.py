@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI
-from pydantic import BaseModel
+# from pydantic import BaseModel
 
 from service.get_data import get_all_data
 from service.dttot import get_similarity
@@ -59,7 +59,7 @@ def treatment_constraint(nama_status, nik_status, dob_status, pob_status):
     return result_recommendation
 
 
-@app.post('/PPATK/')
+@app.get('/PPATK/')
 async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Optional[str]=None, Alamat: Optional[str]=None):
 
     # initialization some variable
