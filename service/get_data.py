@@ -82,12 +82,20 @@ def get_all_data():
     # concat all data
     df_all = pd.concat([df, df2], axis=0, ignore_index=True)
     df_all = pd.concat([df_all, df_OPEC], axis=0, ignore_index=True)
+
     # cleaning all Data
-    df_all = df_all.fillna("no data")
+    cols = list(df_all.columns)
+    cols.remove('Tanggal Lahir')
+    df_all[cols] = df_all[cols].fillna("no data")
     df_all = all_convert_to_list(df_all)
     df_all = data_cleaning(df_all)
     df_all = get_4_char_name(df_all)
-
-    df_all['Tempat Lahir'] = df_all['Tempat Lahir'].str.lower()
+    df_all.columns = map(str.lower, df_all.columns)
+    # df_all = df_all.apply(lambda x: x.astype(str).str.lower())
+    lower_func = lambda x: [ele.lower() for ele in x]
+    # df["4_char"] = df["nama_list"].apply(func)
+    df_all["nama_list"] = df_all["nama_list"].apply(lower_func)
+    df_all['tempat lahir'] = df_all['tempat lahir'].str.lower()
+    # df_all.to_excel("./temp/DTTOT_full_data_new.xlsx", index=False)
 
     return df_all

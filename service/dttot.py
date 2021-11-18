@@ -106,7 +106,6 @@ def jaro_distance(s1, s2):
     # strip name
     s1 = s1.strip()
     s2 = s2.strip()
-
     # If the s are equal
     if (s1 == s2):
         return 1.0
