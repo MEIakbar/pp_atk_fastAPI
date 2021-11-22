@@ -1,3 +1,4 @@
+import time
 import logging
 import pandas as pd
 from ast import literal_eval
@@ -70,19 +71,32 @@ def all_convert_to_list(df):
 
 def get_all_data():
     # DTTOT data processing
+    print("DTTOT and WMD data preprocessing...")
+    start_time = time.time()
     df_dttot = get_data_dttot()
     df_wmd = get_data_wmd()
     df = pd.concat([df_dttot, df_wmd], ignore_index=True)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
     # UK and UN data processing
+    print("UN and UK data preprocessing...")
+    start_time = time.time()
     df_UK = get_data_uk()
     df_UN = get_data_un()
     df2 = pd.concat([df_UK, df_UN], axis=0, ignore_index=True)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
     # OPEC data processing
+    print("OPEC data preprocessing...")
+    start_time = time.time()
     df_OPEC = get_data_opec()
+    print("--- %s seconds ---" % (time.time() - start_time))
+
     # concat all data
+    print("concat all data...")
+    start_time = time.time()
     df_all = pd.concat([df, df2], axis=0, ignore_index=True)
     df_all = pd.concat([df_all, df_OPEC], axis=0, ignore_index=True)
-
     # cleaning all Data
     cols = list(df_all.columns)
     cols.remove('Tanggal Lahir')
@@ -91,11 +105,15 @@ def get_all_data():
     df_all = data_cleaning(df_all)
     df_all = get_4_char_name(df_all)
     df_all.columns = map(str.lower, df_all.columns)
-    # df_all = df_all.apply(lambda x: x.astype(str).str.lower())
     lower_func = lambda x: [ele.lower() for ele in x]
-    # df["4_char"] = df["nama_list"].apply(func)
     df_all["nama_list"] = df_all["nama_list"].apply(lower_func)
     df_all['tempat lahir'] = df_all['tempat lahir'].str.lower()
-    # df_all.to_excel("./temp/DTTOT_full_data_new.xlsx", index=False)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
-    return df_all
+    # saving data to csv file
+    print("save_data to csv file...")
+    start_time = time.time()
+    df_all.to_csv("../data/all_data.csv", index=False)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
+    # return df_all

@@ -109,47 +109,36 @@ def jaro_distance(s1, s2):
     # If the s are equal
     if (s1 == s2):
         return 1.0
-
     # Length of two s
     len1 = len(s1)
     len2 = len(s2)
-
     # Maximum distance upto which matching is allowed
     max_dist = floor(max(len1, len2) / 2) - 1
-
     # Count of matches
     match = 0
-
     # Hash for matches
     hash_s1 = [0] * len(s1)
     hash_s2 = [0] * len(s2)
-
     # Traverse through the first
     for i in range(len1):
-
         # Check if there is any matches
         for j in range(max(0, i - max_dist),
                        min(len2, i + max_dist + 1)):
-
             # If there is a match
             if (s1[i] == s2[j] and hash_s2[j] == 0):
                 hash_s1[i] = 1
                 hash_s2[j] = 1
                 match += 1
                 break
-
     # If there is no match
     if (match == 0):
         return 0.0
-
     # Number of transpositions
     t = 0
     point = 0
-
     # Count number of occurrences where two characters match but there is a third matched character in between the indices
     for i in range(len1):
         if (hash_s1[i]):
-
             # Find the next matched character in second
             while (hash_s2[point] == 0):
                 point += 1
@@ -162,7 +151,6 @@ def jaro_distance(s1, s2):
     result = (match/ len1 + match / len2 + (match - t + 1) / match)/ 3.0
     if result > 1.00:
         result = 1.00
-
     return result
 
 def jaro_distance_max(row, input_nama):
@@ -173,14 +161,11 @@ def dttot_prepro(path):
     # read file
     print("read_excel file..")
     df_dttot = pd.read_excel(path)
-
     # cleaning data
     print("cleaning data..")
     df_dttot["Deskripsi"] = df_dttot["Deskripsi"].fillna("No Data")
-
     pass_name = ["Paspor", "Paspor", "PASPOR", "passport", "Passport"]
     nik_name = ["NIK", "nik", "nomor identifikasi nasional", "Nomor Identifikasi Nasional", "Nomor identifikasi nasional"]
-
     paspor_str = '|'.join(pass_name)
     nik_str = '|'.join(nik_name)
 
@@ -190,19 +175,14 @@ def dttot_prepro(path):
     df_dttot['Deskripsi'] = df_dttot['Deskripsi'].str.replace(";", " ")
     df_dttot['Deskripsi'] = df_dttot['Deskripsi'].str.replace(".", "")
     df_dttot['Deskripsi'] = df_dttot['Deskripsi'].str.replace(",", " ")
-
     df_dttot['Nama'] = df_dttot['Nama'].str.lower()
     df_dttot['NIK'] = df_dttot['Deskripsi'].apply(dttot_extract_NIK)
     df_dttot['paspor'] = df_dttot['Deskripsi'].apply(dttot_extract_paspor)
     df_dttot["nama_list"] = df_dttot['Nama'].str.split("alias")
-
     # fillnan
     df_dttot = df_dttot.fillna("No Data")
-
-
     # filter Orang
     df_dttot = df_dttot[df_dttot["Terduga"] == "Orang"].reset_index(drop=True)
-
     # change columns name
     df_dttot = df_dttot.rename(columns = {"Tpt Lahir" : "Tempat Lahir",
                                           "Tgl Lahir" : "Tanggal Lahir",
@@ -223,12 +203,9 @@ def wmd_prepro(df1, df2):
     df2 = df2.iloc[1:].reset_index(drop=True)
 
     df_mwd = pd.concat([df1, df2], ignore_index=True)
-    # df_mwd["nama_list"] = df_mwd['Alias'].str.split(" ")
     df_mwd['Alias'] = df_mwd['Alias'].str.lower()
     df_mwd["nama_list"] = df_mwd['Alias']
-
     df_mwd = df_mwd.fillna("No Data")
-
     # change columns name
     df_mwd = df_mwd.rename(columns={"Informasi Lain" : "Deskripsi",
                                     "Nomor Identitas" : "NIK",
@@ -240,34 +217,26 @@ def UK_prepro(df):
     # combine multiple columns into 1 with space seperator
     cols = ["Name 6", "Name 1", "Name 2", "Name 3", "Name 4", "Name 5"]
     df["Nama"] = df[cols].apply(lambda x: ' '.join(x.dropna()), axis=1)
-
     df = df.fillna("No Data")
     df["nama_list"] =  df["Nama"].apply(all_get_list_value)
-
     # delete No data value in nama_list column
     df['nama_list'] = df['nama_list'].apply(no_data_deletation)
-
     # create Nama and Alamat columns
     nama_cols = ["Name 6", "Name 1", "Name 2", "Name 3", "Name 4", "Name 5"]
     alamat_cols = ["Address 1", "Address 2", "Address 3", "Address 4", "Address 5", "Address 6"]
-
     df['Nama'] = df[nama_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
     df['Nama'] = df['Nama'].str.replace("No Data ", "")
     df['Nama'] = df['Nama'].str.replace(" No Data", "")
     df['Nama'] = df['Nama'].str.lower()
-
     df['Alamat'] = df[alamat_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
     df['Alamat'] = df['Alamat'].str.replace("No Data ", "")
     df['Alamat'] = df['Alamat'].str.replace(" No Data", "")
-
     # delete Name and Address columns
     df.drop(nama_cols, axis=1, inplace=True)
     df.drop(alamat_cols, axis=1, inplace=True)
-
     # tempat lahir
     df["Tempat Lahir"] = df["Town of Birth"] + df["Country of Birth"]
     df["Tempat Lahir"] = df["Tempat Lahir"].str.replace("No Data", "")
-
     # remove columns
     cols = ["Town of Birth", "Country of Birth"]
     df.drop(cols, axis=1, inplace=True)
@@ -287,16 +256,13 @@ def UN_prepro(df):
     cols.remove("INDIVIDUAL_DATE_OF_BIRTH")
     df[cols] = df[cols].fillna("No Data")
     cols = ["FIRST_NAME", "SECOND_NAME", "THIRD_NAME", "FOURTH_NAME"]
-
     # create Nama column
     df['Nama'] = df[cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
     df['Nama'] = df['Nama'].str.replace("No Data ", "")
     df['Nama'] = df['Nama'].str.replace(" No Data", "")
     df['Nama'] = df['Nama'].str.lower()
-
     cols_orderdict = ["DESIGNATION", "LIST_TYPE", "LAST_DAY_UPDATED", "INDIVIDUAL_ALIAS", "INDIVIDUAL_ADDRESS",
                       "INDIVIDUAL_PLACE_OF_BIRTH", "INDIVIDUAL_DATE_OF_BIRTH", "INDIVIDUAL_DOCUMENT"]
-
     for col in cols_orderdict:
         df[col] = UN_extract_orderdict_cols(df, col)
 
@@ -304,15 +270,12 @@ def UN_prepro(df):
     df['nama_list']= df[["Nama", "INDIVIDUAL_ALIAS"]].values.tolist()
      # delete No data value in nama_list column
     df['nama_list'] = df['nama_list'].apply(no_data_deletation)
-
     # delete Name columns
     cols = ["FIRST_NAME", "SECOND_NAME", "THIRD_NAME", "FOURTH_NAME", "INDIVIDUAL_ALIAS"]
     df.drop(cols, axis=1, inplace=True)
-
     # remove columns
     cols = ["SORT_KEY", "SORT_KEY_LAST_MOD"]
     df.drop(cols, axis=1, inplace=True)
-
     df['INDIVIDUAL_DATE_OF_BIRTH'] = df['INDIVIDUAL_DATE_OF_BIRTH'].apply(UN_date_prepro)
     # rename Columns
     df = df.rename(columns={"LISTED_ON" : "Listed On",
@@ -334,7 +297,6 @@ def OPEC_prepro(df_OPEC):
     df_OPEC = df_OPEC.rename(columns={"nama_list" : "Deskripsi"})
     df_OPEC = df_OPEC[df_OPEC["Deskripsi"].str.contains("individual")].reset_index(drop=True)
     df_OPEC = df_OPEC.iloc[1:].reset_index(drop=True)
-
     df_OPEC["Nama"] = df_OPEC['Deskripsi'].apply(extract_OPEC_Nama)
     df_OPEC["Nama"] = df_OPEC["Nama"].str.replace(",", "")
     df_OPEC["Nama"] = df_OPEC["Nama"].str.replace('"', "")
@@ -345,21 +307,11 @@ def OPEC_prepro(df_OPEC):
     df_OPEC["nama_list"] = df_OPEC['Nama'].apply(create_OPEC_name_list)
     df_OPEC = df_OPEC.drop_duplicates(subset=['Nama']).reset_index(drop=True)
     df_OPEC = df_OPEC.fillna("No Data")
-
     return df_OPEC
 
 
 def get_similarity(df, input_name, treshold_value):
-
-    now = datetime.now()
-    current_time = now.strftime("%yy_%m_%d_%H_%M_%S")
-
     print("calculate distance")
     df['similarity'] = df.apply(lambda x: jaro_distance_max(x['nama_list'], input_name), axis=1)
-    # save to local as excel file
-    # df.to_excel("./temp/df_dttot_similarity_{}.xlsx".format(current_time), index=False)
-    # filter
-    # df = df[df['similarity'] >= treshold_value].reset_index(drop=True)
     df = df.sort_values(by="similarity", ascending=False).reset_index(drop=True)
-
     return df
