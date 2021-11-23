@@ -25,7 +25,7 @@ def get_constraint():
     return df
 
 def get_all_data():
-    df = pd.read_csv("../data/all_data.csv")
+    df = pd.read_csv("./data/all_data.csv")
     df['nama_list'] = df['nama_list'].apply(literal_eval)
     df = df.fillna('no data')
     return df
