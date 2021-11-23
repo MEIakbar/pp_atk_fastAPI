@@ -72,6 +72,19 @@ def treatment_constraint(nama_status, nik_status, dob_status, pob_status):
     return result_recommendation
 
 def main_funct(Nama, NIK, DOB, POB):
+    # if the user fill with empty string trun it into None
+    if Nama is not None:
+        if Nama.isspace() or Nama == "":
+            Nama = None
+    if NIK is not None:
+        if NIK.isspace() or NIK == "":
+            NIK = None
+    if DOB is not None:
+        if DOB.isspace() or DOB == "":
+            DOB = None
+    if POB is not None:
+        if POB.isspace() or POB == "":
+            POB = None
     # initialization some variable
     nama_status = "not match"
     nik_status = "not match"
