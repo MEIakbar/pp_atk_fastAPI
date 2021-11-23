@@ -25,7 +25,7 @@ def get_constraint():
     return df
 
 def get_all_data():
-    df = pd.read_csv("./data/all_data.csv")
+    df = pd.read_csv("../data/all_data.csv")
     df['nama_list'] = df['nama_list'].apply(literal_eval)
     df = df.fillna('no data')
     return df
@@ -71,12 +71,7 @@ def treatment_constraint(nama_status, nik_status, dob_status, pob_status):
     result_recommendation =  list(set(result["recommendation"]))[0]
     return result_recommendation
 
-
-# def main_funct(Nama, NIK, DOB, POB, Alamat):
-
-
-@app.get('/PPATK/')
-async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Optional[str]=None):
+def main_funct(Nama, NIK, DOB, POB):
     # initialization some variable
     nama_status = "not match"
     nik_status = "not match"
@@ -104,7 +99,6 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
             dict_filter["nama"] = Nama
             nama_status = "match"
     print("--- %s seconds ---" % (time.time() - start_time))
-
     # filter NIK_input
     print("Filter NIK...")
     start_time = time.time()
@@ -124,7 +118,6 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
             else:
                 nik_status = "match"
     print("--- %s seconds ---" % (time.time() - start_time))
-
     # filter DOB_similarity
     print("Filter DOB...")
     start_time = time.time()
@@ -139,7 +132,6 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
             df_nama = df_DOB.copy()
             dob_status = "match"
     print("--- %s seconds ---" % (time.time() - start_time))
-
     # filter POB_similarity
     print("Filter POB...")
     start_time = time.time()
@@ -155,7 +147,6 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
             dict_filter["pob"] = POB
             pob_status = "match"
     print("--- %s seconds ---" % (time.time() - start_time))
-
     # set Note output
     statusList = [nama_status, nik_status, dob_status, pob_status, alamat_status]
     if 'match' in (statusList):
@@ -163,10 +154,8 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
         cols = ["nama", "nama_list", "nik", "tanggal lahir", "tempat lahir", "kewarganegaraan", "paspor", "alamat"]
         df_outp = df_outp[cols]
         outp = to_json(df_outp)
-        # outp = df.to_dict()
     else:
         outp = None
-
     # get Similarity_Score
     simalarity_value = None
     if nama_status == "match":
@@ -174,8 +163,14 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
         simalarity_value = df["similarity"][0]
         if simalarity_value < 0.8:
             nama_status = "not match"
-
     reccomendation = treatment_constraint(nama_status, nik_status, dob_status, pob_status)
+
+    return reccomendation, simalarity_value, nik_status, dob_status, pob_status, outp
+
+
+@app.get('/PPATK/')
+async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Optional[str]=None):
+    reccomendation, simalarity_value, nik_status, dob_status, pob_status, outp = main_funct(Nama, NIK, DOB, POB)
     respond_out = {
         "Recommendation" : reccomendation,
         "Nama Similarity" : simalarity_value,
@@ -194,87 +189,7 @@ async def dttot(item: Userinput):
     DOB = item.DOB
     POB = item.POB
     # Alamat = item.Alamat
-
-    # initialization some variable
-    nama_status = "not match"
-    nik_status = "not match"
-    dob_status = "not match"
-    pob_status = "not match"
-    alamat_status = "not match"
-    Similarity_Percentage = 0.8
-    dict_filter = {}
-
-    # get data
-    df = get_all_data()
-
-    start_time = time.time()
-    # filter nama berdasarkan 4 character awal untuk setiap kata
-    if Nama is not None:
-        Nama = Nama.strip()
-        Nama = Nama.lower()
-        df_nama = get_input_char(df, Nama)
-        if df_nama.shape[0] > 0:
-            df = df_nama.copy()
-            dict_filter["nama"] = Nama
-            nama_status = "match"
-    print("--- %s seconds ---" % (time.time() - start_time))
-
-    # filter NIK_input
-    if NIK is not None:
-        NIK = NIK.strip()
-        NIK = NIK.lower()
-        if df_nama.shape[0] > 0:
-            df = df_nama.copy()
-        df_NIK = NIK_similarity(df, 'nik', NIK)
-        if df_NIK.shape[0] > 0:
-            df = df_NIK.copy()
-            dict_filter["nik"] = NIK
-            if len(NIK) <= 7:
-                nik_status = "not match"
-            else:
-                nik_status = "match"
-
-    # filter DOB_similarity
-    if DOB is not None:
-        DOB = DOB.strip()
-        DOB = DOB.lower()
-        df_DOB = DOB_similarity(df_nama, 'tanggal lahir', DOB)
-        if NIK is not None:
-            if df_NIK.shape[0] > 0:
-                df_DOB = DOB_similarity(df_NIK, 'tanggal lahir', DOB)
-        if df_DOB.shape[0] > 0:
-            df_nama = df_DOB.copy()
-            dob_status = "match"
-
-    # filter POB_similarity
-    if POB is not None:
-        POB = POB.strip()
-        POB = POB.lower()
-        df_POB = POB_similarity(df_nama, 'tempat lahir', POB)
-        if NIK is not None:
-            if df_NIK.shape[0] > 0:
-                df_POB = POB_similarity(df_NIK, 'tempat lahir', POB)
-        if df_POB.shape[0] > 0 :
-            df = df_POB.copy()
-            dict_filter["pob"] = POB
-            pob_status = "match"
-
-    # set Note output
-    statusList = [nama_status, nik_status, dob_status, pob_status, alamat_status]
-    if 'match' in (statusList):
-        outp = to_json(df)
-    else:
-        outp = None
-
-    # get Similarity_Score
-    simalarity_value = None
-    if nama_status == "match":
-        df = nama_similarity(df, Nama, Similarity_Percentage)
-        simalarity_value = df["similarity"][0]
-        if simalarity_value < 0.8:
-            nama_status = "not match"
-
-    reccomendation = treatment_constraint(nama_status, nik_status, dob_status, pob_status)
+    reccomendation, simalarity_value, nik_status, dob_status, pob_status, outp = main_funct(Nama, NIK, DOB, POB)
     respond_out = {
         "Recommendation" : reccomendation,
         "Nama Similarity" : simalarity_value,
