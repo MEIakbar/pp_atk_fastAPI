@@ -116,4 +116,10 @@ def get_all_data():
     df_all.to_csv("../data/all_data.csv", index=False)
     print("--- %s seconds ---" % (time.time() - start_time))
 
+    # saving data to excel file
+    print("save_data to excel file...")
+    start_time = time.time()
+    df_all.to_excel("../data/all_data.xlsx", index=False)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
     # return df_all

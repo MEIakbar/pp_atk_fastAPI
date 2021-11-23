@@ -59,9 +59,14 @@ def UN_date_prepro(s):
     except:
         return s
 
+# def extract_OPEC_Nama(s):
+#     return s.split(")")[0]
 def extract_OPEC_Nama(s):
-    return s.split(";")[0]
-
+    if ")" in s:
+        return s.split(")")[0]
+    else:
+        return s.split(";")[0]
+        
 def extract_OPEC_NIK(s):
     """
     extract NIK from Deskripsi
@@ -94,7 +99,8 @@ def extract_OPEC_POB(s):
 
 def create_OPEC_name_list(s):
     try:
-        result = s.split(" (a.k.a. ")
+        list_string = s.split("a.k.a.")
+        result = [''.join(reversed(s.split(','))) for s in list_string]
         return result
     except:
         return [s]
@@ -298,9 +304,12 @@ def OPEC_prepro(df_OPEC):
     df_OPEC = df_OPEC[df_OPEC["Deskripsi"].str.contains("individual")].reset_index(drop=True)
     df_OPEC = df_OPEC.iloc[1:].reset_index(drop=True)
     df_OPEC["Nama"] = df_OPEC['Deskripsi'].apply(extract_OPEC_Nama)
-    df_OPEC["Nama"] = df_OPEC["Nama"].str.replace(",", "")
+    df_OPEC["Nama"] = df_OPEC["Nama"].str.replace("\n", ",")
+    df_OPEC["Nama"] = df_OPEC["Nama"].str.replace(";", "")
+    df_OPEC["Nama"] = df_OPEC["Nama"].str.replace("(", "")
     df_OPEC["Nama"] = df_OPEC["Nama"].str.replace('"', "")
     df_OPEC['Nama'] = df_OPEC['Nama'].str.lower()
+
     df_OPEC['NIK'] = df_OPEC['Deskripsi'].apply(extract_OPEC_NIK)
     df_OPEC['Tanggal Lahir'] = df_OPEC['Deskripsi'].apply(extract_OPEC_DOB)
     df_OPEC['Tempat Lahir'] = df_OPEC['Deskripsi'].apply(extract_OPEC_POB)
