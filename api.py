@@ -24,8 +24,8 @@ def get_constraint():
     get constraint / schema data for DTTOT
     output : DataFrame
     """
-    file_path = "./data/Constraint_PPATK.csv"
-    df = pd.read_csv(file_path)
+    file_path = "./data/Constraint_PPATK.xlsx"
+    df = pd.read_excel(file_path)
     return df
 
 def get_all_data():
