@@ -7,7 +7,7 @@ from ast import literal_eval
 from pydantic import BaseModel
 from typing import Optional
 from fastapi import BackgroundTasks, FastAPI
-from service.utility import get_similarity
+from service.dttot import get_similarity
 import warnings
 warnings.filterwarnings("ignore")
 
