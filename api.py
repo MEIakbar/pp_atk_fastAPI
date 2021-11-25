@@ -7,7 +7,7 @@ from ast import literal_eval
 from pydantic import BaseModel
 from typing import Optional
 from fastapi import BackgroundTasks, FastAPI
-from service.dttot import get_similarity
+from service.utility import get_similarity
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -20,34 +20,54 @@ class Userinput(BaseModel):
     POB: Optional[str]=None
 
 def get_constraint():
-    file_path = "./data/Constraint_PPATK.xlsx"
-    df = pd.read_excel(file_path)
+    """
+    get constraint / schema data for DTTOT
+    output : DataFrame
+    """
+    file_path = "./data/Constraint_PPATK.csv"
+    df = pd.read_csv(file_path)
     return df
 
 def get_all_data():
+    """
+    get data
+    output : DataFrame
+    """
     df = pd.read_csv("./data/all_data.csv")
     df['nama_list'] = df['nama_list'].apply(literal_eval)
     df = df.fillna('no data')
     return df
 
 def get_input_char(df, nama):
+    """
+    filter nama column based on the first 4 character for each word
+    output : DataFrame
+    """
     input_char = ''.join([i[:4] for i in nama.strip().split(' ')])
     df = df[df["4_char"].str.contains(input_char)].reset_index(drop=True)
     return df
 
 def DOB_similarity(df, col, dob_input):
+    """
+    filter DOB column
+    output : DataFrame
+    """
     df = df[df[col].str.contains(dob_input)].reset_index(drop=True)
     return df
 
 def NIK_similarity(df, col, NIK_input):
-    # Get First 14 character of NIK
-    NIK_14chars = NIK_input[0:14]
-    print(NIK_14chars)
-    print(df.shape)
-    df = df[df[col].str.contains(NIK_14chars)].reset_index(drop=True)
+    """
+    filter NIK column
+    output : DataFrame
+    """
+    df = df[df[col].str.contains(NIK_input)].reset_index(drop=True)
     return df
 
 def POB_similarity(df, col, pob_input):
+    """
+    filter POB column
+    output : DataFrame
+    """
     try:
         df = df[df[col].str.contains(pob_input)].reset_index(drop=True)
     except:
@@ -55,6 +75,10 @@ def POB_similarity(df, col, pob_input):
     return df
 
 def nama_similarity(df, input_nama, treshold_value):
+    """
+    get similarity value for nama column
+    output : DataFrame
+    """
     df = get_similarity(df, input_nama, treshold_value)
     return df
 
@@ -189,8 +213,7 @@ async def dttot(Nama, NIK: Optional[str]=None, DOB: Optional[str]=None, POB: Opt
         "Nama Similarity" : simalarity_value,
         "NIK" : nik_status,
         "DOB" : dob_status,
-        "POB" : pob_status,
-        "Note" : outp
+        "POB" : pob_status
     }
     return respond_out
 
@@ -215,6 +238,3 @@ async def dttot(item: Userinput):
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8090, log_level="info", reload=True)
-
-# to run python api.py
-# go here http://127.0.0.1:8090/docs
